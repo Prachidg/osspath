@@ -1,46 +1,31 @@
-const axios = require("axios");
-const User = require("../models/User");
+const { syncUserProfile, fetchRecentEvents, buildActivityHeatmap } = require("../services/githubService");
+const { decrypt } = require("../utils/crypto");
 
 const githubController = {
   fetchAndStoreRepos: async (req, res) => {
     try {
-      const accessToken = req.user.accessToken;
-
-      const reposRes = await axios.get("https://api.github.com/user/repos", {
-        headers: { Authorization: `token ${accessToken}` },
-        params: { per_page: 100, sort: "updated" },
+      const result = await syncUserProfile(req.user);
+      res.json({
+        skills: result.skills,
+        skillProfile: result.skillProfile,
+        readinessScore: result.readinessScore,
+        repoCount: result.repos.length,
       });
-
-      const repos = reposRes.data;
-
-      // Extract skills from repos
-      const languageCount = {};
-      const topicsSet = new Set();
-
-      repos.forEach((repo) => {
-        if (repo.language) {
-          languageCount[repo.language] = (languageCount[repo.language] || 0) + 1;
-        }
-        if (repo.topics) {
-          repo.topics.forEach((t) => topicsSet.add(t));
-        }
-      });
-
-      const skills = [
-        ...Object.keys(languageCount),
-        ...Array.from(topicsSet),
-      ];
-
-      // Update user skills
-      await User.findByIdAndUpdate(req.user._id, {
-        skills,
-        skillProfile: { languageCount, topics: Array.from(topicsSet) },
-      });
-
-      res.json({ repos, skills, skillProfile: { languageCount, topics: Array.from(topicsSet) } });
     } catch (err) {
       console.error("GitHub fetch error:", err.message);
       res.status(500).json({ error: "Failed to fetch GitHub data" });
+    }
+  },
+
+  getActivity: async (req, res) => {
+    try {
+      const token = decrypt(req.user.accessToken);
+      const events = await fetchRecentEvents(req.user.username, token);
+      const heatmapData = buildActivityHeatmap(events);
+      res.json(heatmapData);
+    } catch (err) {
+      console.error("GitHub activity fetch error:", err.message);
+      res.status(500).json({ error: "Failed to fetch activity data" });
     }
   },
 };

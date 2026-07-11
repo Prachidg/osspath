@@ -6,10 +6,13 @@ const authController = {
     res.json({
       id: req.user._id,
       username: req.user.username,
-      avatar: req.user.avatar,
-      email: req.user.email,
+      avatar_url: req.user.avatar,
+      avatarUrl: req.user.avatar,
       skills: req.user.skills,
       readinessScore: req.user.readinessScore,
+      githubStats: req.user.githubStats,
+      skillProfile: req.user.skillProfile,
+      activityPattern: req.user.activityPattern,
     });
   },
 

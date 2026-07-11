@@ -10,7 +10,7 @@ router.get(
   "/github/callback",
   passport.authenticate("github", { failureRedirect: "/" }),
   (req, res) => {
-    res.redirect(`${process.env.CLIENT_URL}/dashboard`);
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback`);
   }
 );
 

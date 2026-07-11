@@ -1,0 +1,26 @@
+`version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: osspath-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory-policy noeviction
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: osspath-qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+  qdrant_storage:
